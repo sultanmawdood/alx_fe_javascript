@@ -7,6 +7,7 @@ let quotes = JSON.parse(localStorage.getItem("quotes")) || [
 let selectedCategory = localStorage.getItem("selectedCategory") || "all";
 const API_URL = "https://jsonplaceholder.typicode.com/posts";
 
+const NOTIFICATION_DIV = document.createElement("div");
 NOTIFICATION_DIV.id = "notification";
 NOTIFICATION_DIV.style.position = "fixed";
 NOTIFICATION_DIV.style.bottom = "20px";
@@ -26,10 +27,9 @@ function showNotification(message) {
 
 function showRandomQuote() {
   const quoteDisplay = document.getElementById("quoteDisplay");
-  const filteredQuotes =
-    selectedCategory === "all"
-      ? quotes
-      : quotes.filter((q) => q.category === selectedCategory);
+  const filteredQuotes = selectedCategory === "all"
+    ? quotes
+    : quotes.filter(q => q.category === selectedCategory);
 
   if (filteredQuotes.length === 0) {
     quoteDisplay.innerHTML = "<p>No quotes in this category.</p>";
@@ -50,23 +50,17 @@ function addQuote() {
     return;
   }
 
-  const newQuote = {
-    id: Date.now(),
-    text: newText,
-    category: newCategory,
-  };
-
+  const newQuote = { id: Date.now(), text: newText, category: newCategory };
   quotes.push(newQuote);
   localStorage.setItem("quotes", JSON.stringify(quotes));
   populateCategories();
   showRandomQuote();
 
-  syncQuoteToServer(newQuote);
-
   document.getElementById("newQuoteText").value = "";
   document.getElementById("newQuoteCategory").value = "";
 
-  showNotification("New quote added & synced with server ✅");
+  showNotification("New quote added locally ✅");
+  syncQuoteToServer(newQuote);
 }
 
 async function syncQuoteToServer(quote) {
@@ -83,13 +77,11 @@ async function syncQuoteToServer(quote) {
     showNotification("⚠️ Failed to sync with server");
   }
 }
-
 async function fetchQuotesFromServer() {
   try {
     const response = await fetch(API_URL);
-    const serverData = await response.json();
-
-    const serverQuotes = serverData.slice(0, 3).map((item, index) => ({
+    const data = await response.json();
+    const serverQuotes = data.slice(0, 3).map((item, index) => ({
       id: index + 1,
       text: item.title,
       category: "ServerSync",
@@ -120,10 +112,16 @@ function handleConflict(serverQuotes) {
   showRandomQuote();
 
   if (conflicts.length > 0) {
-    showNotification(`⚡ Conflicts resolved using server data (${conflicts.length} updates)`);
+    showNotification(`⚡ Conflicts resolved using server data (${conflicts.length})`);
   } else {
     showNotification("✅ Data synced with server");
   }
+}
+
+async function syncQuotes() {
+  showNotification("🔄 Syncing with server...");
+  await fetchQuotesFromServer();
+  showNotification("✅ Sync complete!");
 }
 
 function populateCategories() {
@@ -150,4 +148,4 @@ document.getElementById("newQuote").addEventListener("click", showRandomQuote);
 populateCategories();
 showRandomQuote();
 
-setInterval(fetchQuotesFromServer, 10000);
+setInterval(syncQuotes, 10000);
