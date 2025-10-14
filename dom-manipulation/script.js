@@ -27,9 +27,10 @@ function showNotification(message) {
 
 function showRandomQuote() {
   const quoteDisplay = document.getElementById("quoteDisplay");
-  const filteredQuotes = selectedCategory === "all"
-    ? quotes
-    : quotes.filter(q => q.category === selectedCategory);
+  const filteredQuotes =
+    selectedCategory === "all"
+      ? quotes
+      : quotes.filter(q => q.category === selectedCategory);
 
   if (filteredQuotes.length === 0) {
     quoteDisplay.innerHTML = "<p>No quotes in this category.</p>";
@@ -53,11 +54,12 @@ function addQuote() {
   const newQuote = { id: Date.now(), text: newText, category: newCategory };
   quotes.push(newQuote);
   localStorage.setItem("quotes", JSON.stringify(quotes));
-  populateCategories();
-  showRandomQuote();
 
   document.getElementById("newQuoteText").value = "";
   document.getElementById("newQuoteCategory").value = "";
+
+  populateCategories();
+  showRandomQuote();
 
   showNotification("New quote added locally ✅");
   syncQuoteToServer(newQuote);
@@ -71,12 +73,13 @@ async function syncQuoteToServer(quote) {
       headers: { "Content-Type": "application/json" },
     });
     if (response.ok) {
-      showNotification("Quote synced successfully with server!");
+      showNotification("Quotes synced with server!");
     }
   } catch (error) {
     showNotification("⚠️ Failed to sync with server");
   }
 }
+
 async function fetchQuotesFromServer() {
   try {
     const response = await fetch(API_URL);
@@ -94,10 +97,10 @@ async function fetchQuotesFromServer() {
 }
 
 function handleConflict(serverQuotes) {
-  const localIDs = quotes.map((q) => q.id);
+  const localIDs = quotes.map(q => q.id);
   let conflicts = [];
 
-  serverQuotes.forEach((sQuote) => {
+  serverQuotes.forEach(sQuote => {
     const index = localIDs.indexOf(sQuote.id);
     if (index !== -1) {
       quotes[index] = sQuote;
@@ -113,22 +116,20 @@ function handleConflict(serverQuotes) {
 
   if (conflicts.length > 0) {
     showNotification(`⚡ Conflicts resolved using server data (${conflicts.length})`);
-  } else {
-    showNotification("✅ Data synced with server");
   }
 }
 
 async function syncQuotes() {
   showNotification("🔄 Syncing with server...");
   await fetchQuotesFromServer();
-  showNotification("✅ Sync complete!");
+  showNotification("Quotes synced with server!"); 
 }
 
 function populateCategories() {
   const filter = document.getElementById("categoryFilter");
-  const categories = [...new Set(quotes.map((q) => q.category))];
+  const categories = [...new Set(quotes.map(q => q.category))];
   filter.innerHTML = `<option value="all">All Categories</option>`;
-  categories.forEach((cat) => {
+  categories.forEach(cat => {
     const option = document.createElement("option");
     option.value = cat;
     option.textContent = cat;
